@@ -37,6 +37,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddValidatorsFromAssemblyContaining<EmployeeValidator>();
 builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -57,9 +58,14 @@ using (var scope = app.Services.CreateScope())
 app.UseSwagger();
 app.UseSwaggerUI();
 
-//app.UseHttpsRedirection();
+app.MapHealthChecks("/health");
+app.MapGet("/", (HttpContext context) =>
+{
+    context.Response.Redirect("/health");
+    return Task.CompletedTask;
+});
 
-app.UseAuthorization();
+app.UseHttpsRedirection();
 
 app.MapControllers();
 
