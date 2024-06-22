@@ -65,7 +65,7 @@ app.MapGet("/", (HttpContext context) =>
     return Task.CompletedTask;
 });
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.MapControllers();
 
