@@ -3,6 +3,7 @@ using EmployeeProfileManagement;
 using EmployeeProfileManagement.Models;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +39,12 @@ builder.Services.AddValidatorsFromAssemblyContaining<EmployeeValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
 var app = builder.Build();
+
+// Use forwarded headers middleware
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.All
+});
 
 // Seed the database
 using (var scope = app.Services.CreateScope())
