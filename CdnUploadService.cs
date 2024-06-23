@@ -23,7 +23,7 @@ public class CdnUploadService
             var fileContent = new StreamContent(file.OpenReadStream());
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
 
-            content.Add(fileContent, "file", file.FileName);
+            content.Add(fileContent, "file", $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}");
 
             var requestUri = $"{_cdnSettings.CdnUrl}/cdn/upload?resource={resource}";
 
