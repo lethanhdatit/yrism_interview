@@ -9,6 +9,20 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+const string CorsSpecificOrigins = "CorsSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(CorsSpecificOrigins,
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowCredentials()
+                  .AllowAnyMethod();
+        });
+});
+
 // Add services to the container.
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -60,7 +74,7 @@ app.MapGet("/", (HttpContext context) =>
 });
 
 app.UseHttpsRedirection();
-
+app.UseCors(CorsSpecificOrigins);
 app.MapControllers();
 
 app.Run();
