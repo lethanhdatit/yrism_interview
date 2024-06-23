@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using EmployeeProfileManagement.Models;
+﻿using EmployeeProfileManagement.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,12 +9,10 @@ namespace EmployeeProfileManagement.Controllers
     public class PositionResourcesController : ControllerBase
     {
         private readonly EmployeeContext _context;
-        private readonly IMapper _mapper;
 
-        public PositionResourcesController(EmployeeContext context, IMapper mapper)
+        public PositionResourcesController(EmployeeContext context)
         {
             _context = context;
-            _mapper = mapper;
         }
 
         // GET: api/PositionResources
@@ -26,8 +23,23 @@ namespace EmployeeProfileManagement.Controllers
                 .Include(pr => pr.ToolLanguageResources)
                 .ToListAsync();
 
-            var positionResourceDTOs = _mapper.Map<List<PositionResourceDTO>>(positionResources);
+            var positionResourceDTOs = positionResources.Select(pr => MapToPositionResourceDTO(pr)).ToList();
             return Ok(positionResourceDTOs);
+        }
+
+        private PositionResourceDTO MapToPositionResourceDTO(PositionResource positionResource)
+        {
+            return new PositionResourceDTO
+            {
+                PositionResourceId = positionResource.PositionResourceId,
+                Name = positionResource.Name,
+                ToolLanguageResources = positionResource.ToolLanguageResources.Select(tlr => new ToolLanguageResourceDTO
+                {
+                    ToolLanguageResourceId = tlr.ToolLanguageResourceId,
+                    PositionResourceId = tlr.PositionResourceId,
+                    Name = tlr.Name
+                }).ToList()
+            };
         }
     }
 }

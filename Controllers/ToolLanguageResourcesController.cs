@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using EmployeeProfileManagement.Models;
+﻿using EmployeeProfileManagement.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,12 +9,10 @@ namespace EmployeeProfileManagement.Controllers
     public class ToolLanguageResourcesController : ControllerBase
     {
         private readonly EmployeeContext _context;
-        private readonly IMapper _mapper;
 
-        public ToolLanguageResourcesController(EmployeeContext context, IMapper mapper)
+        public ToolLanguageResourcesController(EmployeeContext context)
         {
             _context = context;
-            _mapper = mapper;
         }
 
         // GET: api/ToolLanguageResources
@@ -23,8 +20,18 @@ namespace EmployeeProfileManagement.Controllers
         public async Task<ActionResult<IEnumerable<ToolLanguageResourceDTO>>> GetToolLanguageResources()
         {
             var toolLanguageResources = await _context.ToolLanguageResources.ToListAsync();
-            var toolLanguageResourceDTOs = _mapper.Map<List<ToolLanguageResourceDTO>>(toolLanguageResources);
+            var toolLanguageResourceDTOs = toolLanguageResources.Select(tlr => MapToToolLanguageResourceDTO(tlr)).ToList();
             return Ok(toolLanguageResourceDTOs);
+        }
+
+        private ToolLanguageResourceDTO MapToToolLanguageResourceDTO(ToolLanguageResource toolLanguageResource)
+        {
+            return new ToolLanguageResourceDTO
+            {
+                ToolLanguageResourceId = toolLanguageResource.ToolLanguageResourceId,
+                PositionResourceId = toolLanguageResource.PositionResourceId,
+                Name = toolLanguageResource.Name
+            };
         }
     }
 }
