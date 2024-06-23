@@ -6,12 +6,18 @@ namespace EmployeeProfileManagement.Models
     {
         public EmployeeContext(DbContextOptions<EmployeeContext> options) : base(options) { }
 
-        public DbSet<Employee> Employees { get; set; }
-        public DbSet<Position> Positions { get; set; }
-        public DbSet<ToolLanguage> ToolLanguages { get; set; }
-        public DbSet<Image> Images { get; set; }
-        public DbSet<PositionResource> PositionResources { get; set; }
-        public DbSet<ToolLanguageResource> ToolLanguageResources { get; set; }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            // Enable lazy loading proxies
+            optionsBuilder.UseLazyLoadingProxies();
+        }
+
+        public virtual DbSet<Employee> Employees { get; set; }
+        public virtual DbSet<Position> Positions { get; set; }
+        public virtual DbSet<ToolLanguage> ToolLanguages { get; set; }
+        public virtual DbSet<Image> Images { get; set; }
+        public virtual DbSet<PositionResource> PositionResources { get; set; }
+        public virtual DbSet<ToolLanguageResource> ToolLanguageResources { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -19,6 +25,26 @@ namespace EmployeeProfileManagement.Models
                 .HasMany(pr => pr.ToolLanguageResources)
                 .WithOne(tlr => tlr.PositionResource)
                 .HasForeignKey(tlr => tlr.PositionResourceId);
+
+            modelBuilder.Entity<ToolLanguageResource>()
+                .HasMany(tlr => tlr.ToolLanguages)
+                .WithOne(tl => tl.ToolLanguageResource)
+                .HasForeignKey(tl => tl.ToolLanguageResourceId);
+
+            modelBuilder.Entity<Position>()
+                .HasMany(p => p.ToolLanguages)
+                .WithOne(tl => tl.Position)
+                .HasForeignKey(tl => tl.PositionId);
+
+            modelBuilder.Entity<Position>()
+                .HasOne(p => p.PositionResource)
+                .WithMany(pr => pr.Positions)
+                .HasForeignKey(p => p.PositionResourceId);
+
+            modelBuilder.Entity<ToolLanguage>()
+                .HasMany(tl => tl.Images)
+                .WithOne(i => i.ToolLanguage)
+                .HasForeignKey(i => i.ToolLanguageId);
         }
     }
 
@@ -26,45 +52,49 @@ namespace EmployeeProfileManagement.Models
     {
         public int EmployeeId { get; set; }
         public string Name { get; set; }
-        public List<Position> Positions { get; set; }
+        public virtual List<Position> Positions { get; set; }
     }
 
     public class Position
     {
         public int PositionId { get; set; }
-        public string Name { get; set; }
+        public int PositionResourceId { get; set; }
         public int DisplayOrder { get; set; }
-        public List<ToolLanguage> ToolLanguages { get; set; }
+        public virtual List<ToolLanguage> ToolLanguages { get; set; }
+        public virtual PositionResource PositionResource { get; set; }
         public int EmployeeId { get; set; }
+        public virtual Employee Employee { get; set; }
     }
 
     public class ToolLanguage
     {
         public int ToolLanguageId { get; set; }
-        public string Name { get; set; }
+        public int ToolLanguageResourceId { get; set; }
         public int DisplayOrder { get; set; }
         public int From { get; set; }
         public int To { get; set; }
         public string Description { get; set; }
-        public List<Image> Images { get; set; }
+        public virtual List<Image> Images { get; set; }
+        public virtual ToolLanguageResource ToolLanguageResource { get; set; }
         public int PositionId { get; set; }
+        public virtual Position Position { get; set; }
     }
 
     public class Image
     {
         public int ImageId { get; set; }
-        public byte[] Data { get; set; }
-        public string Name { get; set; }
-        public string FileName { get; set; }
+        public string CdnUrl { get; set; }
         public int DisplayOrder { get; set; }
         public int ToolLanguageId { get; set; }
+        public virtual ToolLanguage ToolLanguage { get; set; }
     }
 
     public class PositionResource
     {
         public int PositionResourceId { get; set; }
         public string Name { get; set; }
-        public List<ToolLanguageResource> ToolLanguageResources { get; set; }
+        public virtual List<ToolLanguageResource> ToolLanguageResources { get; set; }
+        public virtual List<Position> Positions { get; set; }
     }
 
     public class ToolLanguageResource
@@ -72,7 +102,8 @@ namespace EmployeeProfileManagement.Models
         public int ToolLanguageResourceId { get; set; }
         public string Name { get; set; }
         public int PositionResourceId { get; set; }
-        public PositionResource PositionResource { get; set; }
+        public virtual PositionResource PositionResource { get; set; }
+        public virtual List<ToolLanguage> ToolLanguages { get; set; }
     }
 
     public static class DbInitializer

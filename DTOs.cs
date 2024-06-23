@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace EmployeeProfileManagement
 {
@@ -11,14 +10,16 @@ namespace EmployeeProfileManagement
 
     public class PositionDTO
     {
-        public int PositionId { get; set; }
+        public int Id { get; set; }
+        public int PositionResourceId { get; set; }
         public int DisplayOrder { get; set; }
         public List<ToolLanguageDTO> ToolLanguages { get; set; }
     }
 
     public class ToolLanguageDTO
     {
-        public int ToolLanguageId { get; set; }
+        public int Id { get; set; }
+        public int ToolLanguageResourceId { get; set; }
         public int DisplayOrder { get; set; }
         public int From { get; set; }
         public int To { get; set; }
@@ -28,8 +29,9 @@ namespace EmployeeProfileManagement
 
     public class ImageDTO
     {
-        public int ImageId { get; set; }
+        public int Id { get; set; }
         public IFormFile? Data { get; set; }
+        public string? CdnUrl { get; set; }
         public int DisplayOrder { get; set; }
     }
 
@@ -54,7 +56,7 @@ namespace EmployeeProfileManagement
             RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
             RuleFor(x => x.Positions)
                 .NotEmpty().WithMessage("At least one position is required.")
-                .Must(positions => positions.Select(p => p.PositionId).Distinct().Count() == positions.Count)
+                .Must(positions => positions.Select(p => p.PositionResourceId).Distinct().Count() == positions.Count)
                 .WithMessage("Position cannot be duplicated.");
             RuleForEach(x => x.Positions).SetValidator(new PositionValidator());
         }
@@ -64,10 +66,10 @@ namespace EmployeeProfileManagement
     {
         public PositionValidator()
         {
-            RuleFor(x => x.PositionId).NotEmpty().WithMessage("Position name is required.");
+            RuleFor(x => x.PositionResourceId).NotEmpty().WithMessage("PositionResourceId is required.");
             RuleFor(x => x.ToolLanguages)
                 .NotEmpty().WithMessage("At least one Tool/Language is required.")
-                .Must(toolLanguages => toolLanguages.Select(t => t.ToolLanguageId).Distinct().Count() == toolLanguages.Count)
+                .Must(toolLanguages => toolLanguages.Select(t => t.ToolLanguageResourceId).Distinct().Count() == toolLanguages.Count)
                 .WithMessage("Tool/Language cannot be duplicated.");
             RuleForEach(x => x.ToolLanguages).SetValidator(new ToolLanguageValidator());
         }
@@ -77,13 +79,13 @@ namespace EmployeeProfileManagement
     {
         public ToolLanguageValidator()
         {
-            RuleFor(x => x.ToolLanguageId).NotEmpty().WithMessage("Tool/Language name is required.");
+            RuleFor(x => x.ToolLanguageResourceId).NotEmpty().WithMessage("ToolLanguageResourceId is required.");
             RuleFor(x => x.From)
                 .LessThanOrEqualTo(x => x.To)
                 .WithMessage("From year must be less than or equal to To year.");
             RuleFor(x => x.Description).NotEmpty().WithMessage("Description is required.");
             RuleFor(x => x.Images).NotNull().NotEmpty().WithMessage("Images is required.");
-            RuleFor(x => x.Images).ForEach(f => f.Must(d => d.ImageId >= 0 || (d.Data != null && d.Data.Length > 0)).WithMessage("Please provide either 'ImageId' or 'Data' for each image."));
+            RuleFor(x => x.Images).ForEach(f => f.Must(d => d.Id >= 0 || (d.Data != null && d.Data.Length > 0)).WithMessage("Please provide either 'ImageId' or 'Data' for each image."));
             RuleForEach(x => x.Images).SetValidator(new ImageValidator());
         }
     }
@@ -101,7 +103,7 @@ namespace EmployeeProfileManagement
         }
     }
 
-    public static class ByteFileConverter
+    public static class FileConverter
     {
         public static IFormFile? ToFormFile(this byte[] byteArray, string name, string fileName)
         {
@@ -112,6 +114,18 @@ namespace EmployeeProfileManagement
 
             var stream = new MemoryStream(byteArray);
             return new FormFile(stream, 0, byteArray.Length, name, fileName);
+        }
+
+        public static async Task<byte[]?> FromFormFile(this IFormFile? file)
+        {
+            if (file == null)
+            {
+                return null;
+            }
+
+            using var memoryStream = new MemoryStream();
+            await file.CopyToAsync(memoryStream);
+            return memoryStream.ToArray();
         }
     }
 }

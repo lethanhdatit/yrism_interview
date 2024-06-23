@@ -43,7 +43,7 @@ namespace EmployeeProfileManagement.Migrations
                 {
                     PositionId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "text", nullable: false),
+                    PositionResourceId = table.Column<int>(type: "integer", nullable: false),
                     DisplayOrder = table.Column<int>(type: "integer", nullable: false),
                     EmployeeId = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -55,6 +55,12 @@ namespace EmployeeProfileManagement.Migrations
                         column: x => x.EmployeeId,
                         principalTable: "Employees",
                         principalColumn: "EmployeeId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Positions_PositionResources_PositionResourceId",
+                        column: x => x.PositionResourceId,
+                        principalTable: "PositionResources",
+                        principalColumn: "PositionResourceId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -84,7 +90,7 @@ namespace EmployeeProfileManagement.Migrations
                 {
                     ToolLanguageId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "text", nullable: false),
+                    ToolLanguageResourceId = table.Column<int>(type: "integer", nullable: false),
                     DisplayOrder = table.Column<int>(type: "integer", nullable: false),
                     From = table.Column<int>(type: "integer", nullable: false),
                     To = table.Column<int>(type: "integer", nullable: false),
@@ -100,6 +106,12 @@ namespace EmployeeProfileManagement.Migrations
                         principalTable: "Positions",
                         principalColumn: "PositionId",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ToolLanguages_ToolLanguageResources_ToolLanguageResourceId",
+                        column: x => x.ToolLanguageResourceId,
+                        principalTable: "ToolLanguageResources",
+                        principalColumn: "ToolLanguageResourceId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -108,9 +120,7 @@ namespace EmployeeProfileManagement.Migrations
                 {
                     ImageId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Data = table.Column<byte[]>(type: "bytea", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    FileName = table.Column<string>(type: "text", nullable: false),
+                    CdnUrl = table.Column<string>(type: "text", nullable: false),
                     DisplayOrder = table.Column<int>(type: "integer", nullable: false),
                     ToolLanguageId = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -136,6 +146,11 @@ namespace EmployeeProfileManagement.Migrations
                 column: "EmployeeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Positions_PositionResourceId",
+                table: "Positions",
+                column: "PositionResourceId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ToolLanguageResources_PositionResourceId",
                 table: "ToolLanguageResources",
                 column: "PositionResourceId");
@@ -144,6 +159,11 @@ namespace EmployeeProfileManagement.Migrations
                 name: "IX_ToolLanguages_PositionId",
                 table: "ToolLanguages",
                 column: "PositionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ToolLanguages_ToolLanguageResourceId",
+                table: "ToolLanguages",
+                column: "ToolLanguageResourceId");
         }
 
         /// <inheritdoc />
@@ -153,19 +173,19 @@ namespace EmployeeProfileManagement.Migrations
                 name: "Images");
 
             migrationBuilder.DropTable(
-                name: "ToolLanguageResources");
-
-            migrationBuilder.DropTable(
                 name: "ToolLanguages");
-
-            migrationBuilder.DropTable(
-                name: "PositionResources");
 
             migrationBuilder.DropTable(
                 name: "Positions");
 
             migrationBuilder.DropTable(
+                name: "ToolLanguageResources");
+
+            migrationBuilder.DropTable(
                 name: "Employees");
+
+            migrationBuilder.DropTable(
+                name: "PositionResources");
         }
     }
 }

@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EmployeeProfileManagement.Migrations
 {
     [DbContext(typeof(EmployeeContext))]
-    [Migration("20240623063132_AddFullTextSearchIndex")]
-    partial class AddFullTextSearchIndex
+    [Migration("20240623090633_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,6 +20,9 @@ namespace EmployeeProfileManagement.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("Proxies:ChangeTracking", false)
+                .HasAnnotation("Proxies:CheckEquality", false)
+                .HasAnnotation("Proxies:LazyLoading", true)
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -49,20 +52,12 @@ namespace EmployeeProfileManagement.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ImageId"));
 
-                    b.Property<byte[]>("Data")
+                    b.Property<string>("CdnUrl")
                         .IsRequired()
-                        .HasColumnType("bytea");
+                        .HasColumnType("text");
 
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("integer");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<int>("ToolLanguageId")
                         .HasColumnType("integer");
@@ -88,13 +83,14 @@ namespace EmployeeProfileManagement.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("PositionResourceId")
+                        .HasColumnType("integer");
 
                     b.HasKey("PositionId");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("PositionResourceId");
 
                     b.ToTable("Positions");
                 });
@@ -134,19 +130,20 @@ namespace EmployeeProfileManagement.Migrations
                     b.Property<int>("From")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<int>("PositionId")
                         .HasColumnType("integer");
 
                     b.Property<int>("To")
                         .HasColumnType("integer");
 
+                    b.Property<int>("ToolLanguageResourceId")
+                        .HasColumnType("integer");
+
                     b.HasKey("ToolLanguageId");
 
                     b.HasIndex("PositionId");
+
+                    b.HasIndex("ToolLanguageResourceId");
 
                     b.ToTable("ToolLanguages");
                 });
@@ -175,29 +172,51 @@ namespace EmployeeProfileManagement.Migrations
 
             modelBuilder.Entity("EmployeeProfileManagement.Models.Image", b =>
                 {
-                    b.HasOne("EmployeeProfileManagement.Models.ToolLanguage", null)
+                    b.HasOne("EmployeeProfileManagement.Models.ToolLanguage", "ToolLanguage")
                         .WithMany("Images")
                         .HasForeignKey("ToolLanguageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ToolLanguage");
                 });
 
             modelBuilder.Entity("EmployeeProfileManagement.Models.Position", b =>
                 {
-                    b.HasOne("EmployeeProfileManagement.Models.Employee", null)
+                    b.HasOne("EmployeeProfileManagement.Models.Employee", "Employee")
                         .WithMany("Positions")
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("EmployeeProfileManagement.Models.PositionResource", "PositionResource")
+                        .WithMany("Positions")
+                        .HasForeignKey("PositionResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("PositionResource");
                 });
 
             modelBuilder.Entity("EmployeeProfileManagement.Models.ToolLanguage", b =>
                 {
-                    b.HasOne("EmployeeProfileManagement.Models.Position", null)
+                    b.HasOne("EmployeeProfileManagement.Models.Position", "Position")
                         .WithMany("ToolLanguages")
                         .HasForeignKey("PositionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("EmployeeProfileManagement.Models.ToolLanguageResource", "ToolLanguageResource")
+                        .WithMany("ToolLanguages")
+                        .HasForeignKey("ToolLanguageResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Position");
+
+                    b.Navigation("ToolLanguageResource");
                 });
 
             modelBuilder.Entity("EmployeeProfileManagement.Models.ToolLanguageResource", b =>
@@ -223,12 +242,19 @@ namespace EmployeeProfileManagement.Migrations
 
             modelBuilder.Entity("EmployeeProfileManagement.Models.PositionResource", b =>
                 {
+                    b.Navigation("Positions");
+
                     b.Navigation("ToolLanguageResources");
                 });
 
             modelBuilder.Entity("EmployeeProfileManagement.Models.ToolLanguage", b =>
                 {
                     b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("EmployeeProfileManagement.Models.ToolLanguageResource", b =>
+                {
+                    b.Navigation("ToolLanguages");
                 });
 #pragma warning restore 612, 618
         }

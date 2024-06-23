@@ -1,39 +1,32 @@
-using AutoMapper;
 using EmployeeProfileManagement;
 using EmployeeProfileManagement.Models;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var mapperConfig = new MapperConfiguration(mc =>
-{
-    mc.CreateMap<EmployeeDTO, Employee>();
-    mc.CreateMap<PositionDTO, Position>();
-    mc.CreateMap<ToolLanguageDTO, ToolLanguage>()
-        .ForMember(dest => dest.Images, opt => opt.Ignore()); // Ignore Images mapping as it's handled separately
-    mc.CreateMap<Employee, EmployeeDTO>();
-    mc.CreateMap<Position, PositionDTO>();
-    mc.CreateMap<ToolLanguage, ToolLanguageDTO>();
-    mc.CreateMap<ImageDTO, Image>()
-        .ForMember(dest => dest.Data, opt => opt.Ignore()); // Ignore data mapping as it's handled separately
-    mc.CreateMap<Image, ImageDTO>()
-        .ForMember(dest => dest.Data, opt => opt.MapFrom(src => src.Data.ToFormFile(src.Name, src.FileName)));
-
-    // New mappings
-    mc.CreateMap<PositionResource, PositionResourceDTO>();
-    mc.CreateMap<ToolLanguageResource, ToolLanguageResourceDTO>();
-});
-
-IMapper mapper = mapperConfig.CreateMapper();
-builder.Services.AddSingleton(mapper);
-
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    // Configure options to ignore null properties
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
 builder.Services.AddDbContext<EmployeeContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Add services to the container.
+builder.Services.AddHttpClient<CdnUploadService>();
+
+// Configure CdnSettings from appsettings.json
+builder.Services.Configure<CdnSettings>(builder.Configuration.GetSection("CdnSettings"));
+
+// Register CdnSettings for dependency injection
+builder.Services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<CdnSettings>>().Value);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddValidatorsFromAssemblyContaining<EmployeeValidator>();
