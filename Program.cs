@@ -9,18 +9,15 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-const string CorsSpecificOrigins = "CorsSpecificOrigins";
-
+// Add CORS policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(CorsSpecificOrigins,
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyHeader()
-                  .AllowCredentials()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("DynamicCorsPolicy", policy =>
+    {
+        policy.AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Base policy setup
+    });
 });
 
 // Add services to the container.
@@ -74,7 +71,28 @@ app.MapGet("/", (HttpContext context) =>
 });
 
 app.UseHttpsRedirection();
-app.UseCors(CorsSpecificOrigins);
+// Use CORS policy
+app.UseCors("DynamicCorsPolicy");
+
+// Custom middleware to dynamically set the Access-Control-Allow-Origin header
+app.Use(async (context, next) =>
+{
+    var origin = context.Request.Headers["Origin"].ToString();
+    if (!string.IsNullOrEmpty(origin))
+    {
+        context.Response.Headers.Add("Access-Control-Allow-Origin", new[] { origin });
+    }
+    context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+
+    // Handle preflight request
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.StatusCode = 204;
+        return;
+    }
+
+    await next();
+});
 app.MapControllers();
 
 app.Run();
