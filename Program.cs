@@ -19,7 +19,8 @@ var mapperConfig = new MapperConfiguration(mc =>
     mc.CreateMap<ToolLanguage, ToolLanguageDTO>();
     mc.CreateMap<ImageDTO, Image>()
         .ForMember(dest => dest.Data, opt => opt.Ignore()); // Ignore data mapping as it's handled separately
-    mc.CreateMap<Image, ImageDTO>();
+    mc.CreateMap<Image, ImageDTO>()
+        .ForMember(dest => dest.Data, opt => opt.MapFrom(src => src.Data.ToFormFile(src.Name, src.FileName)));
 
     // New mappings
     mc.CreateMap<PositionResource, PositionResourceDTO>();
@@ -65,7 +66,7 @@ app.MapGet("/", (HttpContext context) =>
     return Task.CompletedTask;
 });
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.MapControllers();
 

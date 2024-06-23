@@ -109,6 +109,8 @@ namespace EmployeeProfileManagement.Migrations
                     ImageId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Data = table.Column<byte[]>(type: "bytea", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    FileName = table.Column<string>(type: "text", nullable: false),
                     DisplayOrder = table.Column<int>(type: "integer", nullable: false),
                     ToolLanguageId = table.Column<int>(type: "integer", nullable: false)
                 },

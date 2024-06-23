@@ -54,6 +54,8 @@ namespace EmployeeProfileManagement.Models
     {
         public int ImageId { get; set; }
         public byte[] Data { get; set; }
+        public string Name { get; set; }
+        public string FileName { get; set; }
         public int DisplayOrder { get; set; }
         public int ToolLanguageId { get; set; }
     }

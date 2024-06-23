@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using AutoMapper;
+using FluentValidation;
 
 namespace EmployeeProfileManagement
 {
@@ -11,7 +12,6 @@ namespace EmployeeProfileManagement
     public class PositionDTO
     {
         public int PositionId { get; set; }
-        public string Name { get; set; }
         public int DisplayOrder { get; set; }
         public List<ToolLanguageDTO> ToolLanguages { get; set; }
     }
@@ -19,7 +19,6 @@ namespace EmployeeProfileManagement
     public class ToolLanguageDTO
     {
         public int ToolLanguageId { get; set; }
-        public string Name { get; set; }
         public int DisplayOrder { get; set; }
         public int From { get; set; }
         public int To { get; set; }
@@ -30,7 +29,7 @@ namespace EmployeeProfileManagement
     public class ImageDTO
     {
         public int ImageId { get; set; }
-        public IFormFile Data { get; set; }
+        public IFormFile? Data { get; set; }
         public int DisplayOrder { get; set; }
     }
 
@@ -65,7 +64,7 @@ namespace EmployeeProfileManagement
     {
         public PositionValidator()
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Position name is required.");
+            RuleFor(x => x.PositionId).NotEmpty().WithMessage("Position name is required.");
             RuleFor(x => x.ToolLanguages)
                 .NotEmpty().WithMessage("At least one Tool/Language is required.")
                 .Must(toolLanguages => toolLanguages.Select(t => t.ToolLanguageId).Distinct().Count() == toolLanguages.Count)
@@ -78,11 +77,13 @@ namespace EmployeeProfileManagement
     {
         public ToolLanguageValidator()
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Tool/Language name is required.");
+            RuleFor(x => x.ToolLanguageId).NotEmpty().WithMessage("Tool/Language name is required.");
             RuleFor(x => x.From)
                 .LessThanOrEqualTo(x => x.To)
                 .WithMessage("From year must be less than or equal to To year.");
             RuleFor(x => x.Description).NotEmpty().WithMessage("Description is required.");
+            RuleFor(x => x.Images).NotNull().NotEmpty().WithMessage("Images is required.");
+            RuleFor(x => x.Images).ForEach(f => f.Must(d => d.ImageId >= 0 || (d.Data != null && d.Data.Length > 0)).WithMessage("Please provide either 'ImageId' or 'Data' for each image."));
             RuleForEach(x => x.Images).SetValidator(new ImageValidator());
         }
     }
@@ -91,10 +92,26 @@ namespace EmployeeProfileManagement
     {
         public ImageValidator()
         {
-            RuleFor(x => x.Data.Length).LessThanOrEqualTo(2 * 1024 * 1024)
-                .WithMessage("Image size must be less than or equal to 2MB.");
-            RuleFor(x => x.Data.ContentType).Must(contentType => contentType.StartsWith("image/"))
-                .WithMessage("Invalid image format. Only image files are allowed.");
+            When(x => x.Data != null, () =>
+            {
+                RuleFor(x => x.Data!.Length).LessThanOrEqualTo(2 * 1024 * 1024).WithMessage("Image size must be less than or equal to 2MB.");
+                RuleFor(x => x.Data!.ContentType).Must(contentType => contentType.StartsWith("image/"))
+                    .WithMessage("Invalid image format. Only image files are allowed.");
+            });
+        }
+    }
+
+    public static class ByteFileConverter
+    {
+        public static IFormFile? ToFormFile(this byte[] byteArray, string name, string fileName)
+        {
+            if (byteArray == null || byteArray.Length == 0)
+            {
+                return null;
+            }
+
+            var stream = new MemoryStream(byteArray);
+            return new FormFile(stream, 0, byteArray.Length, name, fileName);
         }
     }
 }

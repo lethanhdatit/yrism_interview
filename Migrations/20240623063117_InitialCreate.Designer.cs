@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EmployeeProfileManagement.Migrations
 {
     [DbContext(typeof(EmployeeContext))]
-    [Migration("20240622172129_AddFullTextSearchIndex")]
-    partial class AddFullTextSearchIndex
+    [Migration("20240623063117_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -55,6 +55,14 @@ namespace EmployeeProfileManagement.Migrations
 
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("integer");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("ToolLanguageId")
                         .HasColumnType("integer");

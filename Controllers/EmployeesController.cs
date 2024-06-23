@@ -90,11 +90,18 @@ namespace EmployeeProfileManagement.Controllers
                         .ToolLanguages.First(t => t.ToolLanguageId == toolLanguage.ToolLanguageId)
                         .Images)
                     {
+                        if(imageDTO.Data == null)
+                        {
+                            return BadRequest($"Invalid image data");
+                        }
+
                         using var memoryStream = new MemoryStream();
                         await imageDTO.Data.CopyToAsync(memoryStream);
                         var image = new Image
                         {
                             Data = memoryStream.ToArray(),
+                            FileName = imageDTO.Data.FileName,
+                            Name = imageDTO.Data.Name,
                             DisplayOrder = imageDTO.DisplayOrder
                         };
                         toolLanguage.Images.Add(image);
@@ -162,11 +169,18 @@ namespace EmployeeProfileManagement.Controllers
                         var image = toolLanguage.Images.FirstOrDefault(i => i.ImageId == imageDTO.ImageId);
                         if (image == null)
                         {
+                            if(imageDTO.Data == null)
+                            {
+                                return BadRequest($"Invalid image data with ImageId = '{imageDTO.ImageId}'");
+                            }
+
                             using var memoryStream = new MemoryStream();
                             await imageDTO.Data.CopyToAsync(memoryStream);
                             image = new Image
                             {
                                 Data = memoryStream.ToArray(),
+                                FileName = imageDTO.Data.FileName,
+                                Name = imageDTO.Data.Name,
                                 DisplayOrder = imageDTO.DisplayOrder
                             };
                             toolLanguage.Images.Add(image);
@@ -174,9 +188,14 @@ namespace EmployeeProfileManagement.Controllers
                         else
                         {
                             _mapper.Map(imageDTO, image);
-                            using var memoryStream = new MemoryStream();
-                            await imageDTO.Data.CopyToAsync(memoryStream);
-                            image.Data = memoryStream.ToArray();
+                            if(imageDTO.Data != null)
+                            {
+                                using var memoryStream = new MemoryStream();
+                                await imageDTO.Data.CopyToAsync(memoryStream);
+                                image.Data = memoryStream.ToArray();
+                                image.FileName = imageDTO.Data.FileName;
+                                image.Name = imageDTO.Data.Name;
+                            }
                         }
                     }
                 }
