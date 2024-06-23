@@ -112,6 +112,9 @@ namespace EmployeeProfileManagement.Models
         {
             context.Database.EnsureCreated();
 
+            // Create the unaccent extension if it doesn't exist
+            context.Database.ExecuteSqlRaw("CREATE EXTENSION IF NOT EXISTS unaccent");
+
             // Look for any PositionResources
             if (!context.PositionResources.Any())
             {
